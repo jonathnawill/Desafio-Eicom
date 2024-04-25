@@ -31,7 +31,8 @@ public class Pedido {
 
 	private Integer quantidade;
 
-	// Relacionamento com o cliente. O pedido pertence a um cliente.
+	// Relacionamento com o cliente. O pedido pertence a um cliente
+	// e respectivamente ele possui um codigo unico.
 	@ManyToOne
 	@JoinColumn(name = "cliente_id")
 	private Cliente cliente;

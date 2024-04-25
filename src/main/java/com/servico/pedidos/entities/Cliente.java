@@ -54,9 +54,19 @@ public class Cliente {
 	public void setNome(String nome) {
 		this.nome = nome;
 	}
-	
+
 	public List<Pedido> getPedidos() {
 		return pedidos;
 	}
-	
+
+	public void addPedido(Pedido pedido) {
+		pedidos.add(pedido);
+		pedido.setCliente(this); 
+	}
+
+	public void removePedido(Pedido pedido) {
+		pedidos.remove(pedido);
+		pedido.setCliente(null); 
+	}
+
 }

@@ -3,7 +3,7 @@ package com.servico.pedidos;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication()
 public class ServicoPedidosApplication {
 
 	public static void main(String[] args) {
