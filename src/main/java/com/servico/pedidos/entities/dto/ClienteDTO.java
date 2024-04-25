@@ -17,7 +17,7 @@ public class ClienteDTO {
 		this.id = id;
 		this.nome = nome;
 	}
-	
+
 	public ClienteDTO(Cliente entity) {
 		BeanUtils.copyProperties(entity, this);
 	}

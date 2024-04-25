@@ -30,8 +30,16 @@ public class PedidoDTO {
 		this.cliente = cliente;
 	}
 
+	// Copia as propriedades básicas da classe Pedido, costumo usar isso pra facilitar minha conversão de DTO
 	public PedidoDTO(Pedido entity) {
-		BeanUtils.copyProperties(entity, this);
+		BeanUtils.copyProperties(entity, this); 
+
+		// Adiciona o cliente manualmente para garantir que a associação é mantida
+		if (entity.getCliente() != null) {
+			this.cliente = new ClienteDTO(entity.getCliente().getId(), entity.getCliente().getNome());
+		} else {
+			this.cliente = null;
+		}
 	}
 
 	public Long getId() {

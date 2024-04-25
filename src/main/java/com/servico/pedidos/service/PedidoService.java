@@ -1,6 +1,7 @@
 package com.servico.pedidos.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -50,11 +51,11 @@ public class PedidoService {
 		}
 
 		BigDecimal valorTotal = pedido.getValor().multiply(BigDecimal.valueOf(quantidade))
-				.multiply(BigDecimal.ONE.subtract(desconto));
+				.multiply(BigDecimal.ONE.subtract(desconto))
+				.setScale(2, RoundingMode.HALF_UP);
 
 		pedido.setValor(valorTotal);
 
-		// Salvar a entidade no banco de dados
 		Pedido pedidoSalvo = pedidoRepository.save(pedido);
 
 		// Converter a entidade salva para DTO antes de retornar
@@ -63,13 +64,11 @@ public class PedidoService {
 				new ClienteDTO(cliente.getId(), cliente.getNome()));
 	}
 
-	// Retorna um pedido pelo id
 	@Transactional(readOnly = true)
 	public Optional<PedidoDTO> findById(Long id) {
 		return pedidoRepository.findById(id).map(PedidoDTO::new);
 	}
 
-	// Retorna lista de pedidos
 	@Transactional(readOnly = true)
 	public List<PedidoDTO> findAll() {
 		List<Pedido> result = pedidoRepository.findAll();
