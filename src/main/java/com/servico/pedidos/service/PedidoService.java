@@ -6,6 +6,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,15 +28,24 @@ public class PedidoService {
 	@Autowired
 	private ClienteRepository clienteRepository;
 
+	private static final Logger logger = LoggerFactory.getLogger(PedidoService.class);
+
 	@Transactional
 	public PedidoResponse criarPedido(PedidoDTO pedidoDTO) {
 		// Verificar se o cliente existe
-		Cliente cliente = clienteRepository.findById(pedidoDTO.getCliente().getId())
-				.orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado."));
+		Cliente cliente;
+		try {
+			cliente = clienteRepository.findById(pedidoDTO.getCliente().getId())
+					.orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado."));
+		} catch (IllegalArgumentException e) {
+			logger.error("Erro ao encontrar cliente: {}", pedidoDTO.getCliente().getId(), e);
+			throw e; // Relança a exceção para manter a propagação correta
+		}
 
-		// Verificar se o número de controle é unico, procurando um igual no banco
+		// Verificar se o número de controle é único
 		boolean numeroControleExiste = pedidoRepository.findByNumeroControle(pedidoDTO.getNumeroControle()).isPresent();
 		if (numeroControleExiste) {
+			logger.warn("Número de controle já cadastrado: {}", pedidoDTO.getNumeroControle());
 			throw new IllegalArgumentException("Número de controle já cadastrado.");
 		}
 
@@ -67,6 +78,9 @@ public class PedidoService {
 
 		// Settando o valor e salvando no banco
 		pedido.setValor(valorTotal);
+
+		logger.info("Criando pedido com número de controle: {}", pedido.getNumeroControle());
+
 		Pedido pedidoSalvo = pedidoRepository.save(pedido);
 
 		return new PedidoResponse("Sucesso", new PedidoDTO(pedidoSalvo));
@@ -75,20 +89,36 @@ public class PedidoService {
 
 	@Transactional(readOnly = true)
 	public Optional<PedidoDTO> findById(Long id) {
-		return pedidoRepository.findById(id).map(PedidoDTO::new);
+		Optional<PedidoDTO> pedido = pedidoRepository.findById(id).map(PedidoDTO::new);
+		if (pedido.isEmpty()) {
+			logger.warn("Pedido não encontrado com ID: {}", id);
+		} else {
+			logger.info("Pedido encontrado com ID: {}", id);
+		}
+		return pedido;
 	}
 
 	@Transactional(readOnly = true)
 	public List<PedidoDTO> findAll() {
 		List<Pedido> result = pedidoRepository.findAll();
-		List<PedidoDTO> dto = result.stream().map(x -> new PedidoDTO(x)).toList();
+		logger.info("Encontrados {} pedidos", result.size());
+		List<PedidoDTO> dto = result.stream().map(PedidoDTO::new).toList();
 		return dto;
 	}
 
 	// retorna um lista de pedidos por data de cadastro
 	@Transactional(readOnly = true)
 	public List<PedidoDTO> findByDataCadastro(LocalDate dataCadastro) {
+		logger.info("Buscando pedidos por data de cadastro: {}", dataCadastro);
+
 		List<Pedido> result = pedidoRepository.findByDataCadastro(dataCadastro);
+
+		if (result.isEmpty()) {
+			logger.warn("Nenhum pedido encontrado para a data: {}", dataCadastro);
+		} else {
+			logger.info("Encontrados {} pedidos para a data: {}", result.size(), dataCadastro);
+		}
+
 		List<PedidoDTO> dtoList = result.stream().map(PedidoDTO::new).toList();
 		return dtoList;
 	}
