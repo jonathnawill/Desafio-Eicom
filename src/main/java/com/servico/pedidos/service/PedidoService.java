@@ -28,6 +28,7 @@ public class PedidoService {
 	@Autowired
 	private ClienteRepository clienteRepository;
 
+	//Utilizei logger para rastrear ações como criar o pedido, buscar por Id, etc, facilita minha vida na depuração
 	private static final Logger logger = LoggerFactory.getLogger(PedidoService.class);
 
 	@Transactional
@@ -83,8 +84,9 @@ public class PedidoService {
 
 		Pedido pedidoSalvo = pedidoRepository.save(pedido);
 
-		return new PedidoResponse("Sucesso", new PedidoDTO(pedidoSalvo));
-
+		return new PedidoResponse("Pedido criado com sucesso. Número de controle: "
+				+ pedidoSalvo.getNumeroControle(),
+				new PedidoDTO(pedidoSalvo));
 	}
 
 	@Transactional(readOnly = true)
@@ -123,4 +125,15 @@ public class PedidoService {
 		return dtoList;
 	}
 
+	// Metodo para deletar pedido por Id
+	@Transactional
+	public void deletaPedidoPorId(Long id) {
+		pedidoRepository.deleteById(id);
+	}
+
+	// Metodo para buscar pedido pelo número de controle informado pelo usuário
+	@Transactional(readOnly = true)
+	public Optional<PedidoDTO> findByNumeroControle(Long numeroControle) {
+		return pedidoRepository.findByNumeroControle(numeroControle).map(PedidoDTO::new);
+	}
 }

@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,7 +27,7 @@ public class PedidoController {
 	@Autowired
 	private PedidoService pedidoService;
 
-	@PostMapping()
+	@PostMapping("criar-pedido")
 	public ResponseEntity<?> criarPedido(@RequestBody PedidoDTO pedidoDTO) {
 		try {
 			PedidoResponse novoPedido = pedidoService.criarPedido(pedidoDTO);
@@ -38,6 +39,36 @@ public class PedidoController {
 					.body("Erro ao criar o pedido. Tente novamente mais tarde.");
 		}
 	}
+
+	// Endpoint para deletar pedido por ID
+	@DeleteMapping("/{id}")
+	public ResponseEntity<?> deletarPedido(@PathVariable Long id) {
+		try {
+			pedidoService.deletaPedidoPorId(id);
+			return ResponseEntity.ok("Pedido deletado com sucesso.");
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pedido com ID " + id + " não encontrado.");
+		}
+	}
+
+	// Metodo para criar múltiplos pedidos em lote
+	@PostMapping("criar-pedido-em-lote")
+	public ResponseEntity<?> criarPedidosEmLote(@RequestBody List<PedidoDTO> pedidos) {
+		// se a quantidade de item for maior que 10 manda um erro
+		if (pedidos.size() > 10) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("O número máximo de pedidos permitidos é 10");
+		}
+		// forEach para criar pedidos individualmente
+		try {
+			pedidos.forEach(pedidoDTO -> {
+				pedidoService.criarPedido(pedidoDTO);
+			});
+			return ResponseEntity.ok("Pedidos criados com sucesso");
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Erro ao criar pedidos. tente novamente mais tarde");
+		}
+	};
 
 	@GetMapping("/{id}")
 	public ResponseEntity<?> buscarPedidoPorId(@PathVariable Long id) {
@@ -51,6 +82,19 @@ public class PedidoController {
 		return ResponseEntity.ok(pedidos);
 	}
 
+	// Endpoint para buscar pedido pelo número de controlle
+	@GetMapping("/controle/{numeroControle}")
+	public ResponseEntity<?> buscarPedidoPorNumeroControle(@PathVariable Long numeroControle) {
+		Optional<PedidoDTO> pedido = pedidoService.findByNumeroControle(numeroControle);
+
+		if (pedido.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body("Pedido com número de controle " + numeroControle + " não encontrado.");
+		}
+
+		return ResponseEntity.ok(pedido.get());
+	}
+
 	// Método para buscar pedidos por data de cadastro
 	// A URL deve ter a data no formato yyyy-MM-dd, como por exemplo
 	// /pedidos/data/2024-04-25
@@ -60,11 +104,11 @@ public class PedidoController {
 		try {
 			// Converte a data recebida como string para um objeto LocalDate
 			// O formato deve ser yyyy-MM-dd, como 2024-04-25
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 			data = LocalDate.parse(dataCadastro, formatter);
 		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body("Data no formato inválido. Use o formato yyyy-MM-dd.");
+					.body("Data no formato inválido. Use o formato dd-MM-yyyy.");
 		}
 
 		// Busca o pedido no banco de dados com a data que pegamos

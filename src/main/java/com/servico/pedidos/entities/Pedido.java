@@ -25,7 +25,7 @@ public class Pedido {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	// Essa anotação já garante que ele nunca vai se repetir
+	// Essa anotação com a constrint unique garante que não haja duplicatas
 	@Column(nullable = false, unique = true)
 	private Long numeroControle;
 

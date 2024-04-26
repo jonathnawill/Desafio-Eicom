@@ -13,7 +13,8 @@ import jakarta.persistence.Table;
 
 /**
  * Entidade que representa um cliente no sistema. Um cliente pode ter vários
- * pedidos associados a ele.
+ * pedidos associados a ele. Futuramente pode ser uma classe a ser utilizada não
+ * só para pedidos
  */
 @Entity
 @Table(name = "tb_cliente")
@@ -58,15 +59,4 @@ public class Cliente {
 	public List<Pedido> getPedidos() {
 		return pedidos;
 	}
-
-	public void addPedido(Pedido pedido) {
-		pedidos.add(pedido);
-		pedido.setCliente(this); 
-	}
-
-	public void removePedido(Pedido pedido) {
-		pedidos.remove(pedido);
-		pedido.setCliente(null); 
-	}
-
 }
