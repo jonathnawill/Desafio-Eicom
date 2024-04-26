@@ -12,10 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.servico.pedidos.entities.Cliente;
 import com.servico.pedidos.entities.Pedido;
-import com.servico.pedidos.entities.dto.ClienteDTO;
 import com.servico.pedidos.entities.dto.PedidoDTO;
 import com.servico.pedidos.repositories.ClienteRepository;
 import com.servico.pedidos.repositories.PedidoRepository;
+import com.servico.pedidos.request.PedidoResponse;
 
 @Service
 public class PedidoService {
@@ -27,13 +27,20 @@ public class PedidoService {
 	private ClienteRepository clienteRepository;
 
 	@Transactional
-	public PedidoDTO criarPedido(PedidoDTO pedidoDTO) {
+	public PedidoResponse criarPedido(PedidoDTO pedidoDTO) {
 		// Verificar se o cliente existe
 		Cliente cliente = clienteRepository.findById(pedidoDTO.getCliente().getId())
 				.orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado."));
 
+		// Verificar se o número de controle é unico, procurando um igual no banco
+		boolean numeroControleExiste = pedidoRepository.findByNumeroControle(pedidoDTO.getNumeroControle()).isPresent();
+		if (numeroControleExiste) {
+			throw new IllegalArgumentException("Número de controle já cadastrado.");
+		}
+
 		// Criar a entidade Pedido a partir do DTO
 		Pedido pedido = new Pedido();
+		pedido.setNumeroControle(pedidoDTO.getNumeroControle());
 		pedido.setDataCadastro(pedidoDTO.getDataCadastro() != null ? pedidoDTO.getDataCadastro() : LocalDate.now());
 		pedido.setNome(pedidoDTO.getNome());
 		pedido.setValor(pedidoDTO.getValor());
@@ -44,24 +51,26 @@ public class PedidoService {
 		int quantidade = pedido.getQuantidade();
 		BigDecimal desconto = BigDecimal.ZERO;
 
+		// se a quantidade for maior ou igual a 10 da uma desconto de 10/100
 		if (quantidade >= 10) {
 			desconto = new BigDecimal("0.10");
+			// Se a quantidade for maior que 5 da um desconto de 5/100
 		} else if (quantidade > 5) {
-			desconto = new BigDecimal("0.05"); // Desconto para 6 a 9
+			desconto = new BigDecimal("0.05");
 		}
 
+		// Calculo de valorTotal com desconto se assim o tiver
+		// pega o valor e multiplica pela quantidade se houver um desconto ele
+		// multiplica o valor e substrai do valor total
 		BigDecimal valorTotal = pedido.getValor().multiply(BigDecimal.valueOf(quantidade))
-				.multiply(BigDecimal.ONE.subtract(desconto))
-				.setScale(2, RoundingMode.HALF_UP);
+				.multiply(BigDecimal.ONE.subtract(desconto)).setScale(2, RoundingMode.HALF_UP);
 
+		// Settando o valor e salvando no banco
 		pedido.setValor(valorTotal);
-
 		Pedido pedidoSalvo = pedidoRepository.save(pedido);
 
-		// Converter a entidade salva para DTO antes de retornar
-		return new PedidoDTO(pedidoSalvo.getId(), pedidoSalvo.getDataCadastro(), pedidoSalvo.getNome(),
-				pedidoSalvo.getValor(), pedidoSalvo.getQuantidade(),
-				new ClienteDTO(cliente.getId(), cliente.getNome()));
+		return new PedidoResponse("Sucesso", new PedidoDTO(pedidoSalvo));
+
 	}
 
 	@Transactional(readOnly = true)
@@ -80,7 +89,7 @@ public class PedidoService {
 	@Transactional(readOnly = true)
 	public List<PedidoDTO> findByDataCadastro(LocalDate dataCadastro) {
 		List<Pedido> result = pedidoRepository.findByDataCadastro(dataCadastro);
-		List<PedidoDTO> dtoList = result.stream().map(PedidoDTO::new).toList(); 
+		List<PedidoDTO> dtoList = result.stream().map(PedidoDTO::new).toList();
 		return dtoList;
 	}
 

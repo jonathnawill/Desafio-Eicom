@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.servico.pedidos.entities.dto.PedidoDTO;
+import com.servico.pedidos.request.PedidoResponse;
 import com.servico.pedidos.service.PedidoService;
 
 @RestController
@@ -23,8 +24,8 @@ public class PedidoController {
 	private PedidoService pedidoService;
 
 	@PostMapping
-	public ResponseEntity<PedidoDTO> criarPedido(@RequestBody PedidoDTO pedidoDTO) {
-		PedidoDTO novoPedido = pedidoService.criarPedido(pedidoDTO);
+	public ResponseEntity<PedidoResponse> criarPedido(@RequestBody PedidoDTO pedidoDTO) {
+		PedidoResponse novoPedido = pedidoService.criarPedido(pedidoDTO);
 		return ResponseEntity.ok(novoPedido);
 	}
 

@@ -10,6 +10,7 @@ import com.servico.pedidos.entities.Pedido;
 public class PedidoDTO {
 
 	private Long id;
+	private Long numeroControle;
 	private LocalDate dataCadastro;
 	private String nome;
 	private BigDecimal valor;
@@ -21,18 +22,20 @@ public class PedidoDTO {
 	}
 
 	public PedidoDTO(Long id, LocalDate dataCadastro, String nome, BigDecimal valor, Integer quantidade,
-			ClienteDTO cliente) {
+			ClienteDTO cliente, Long numeroControle) {
 		this.id = id;
 		this.dataCadastro = dataCadastro;
 		this.nome = nome;
 		this.valor = valor;
 		this.quantidade = quantidade;
 		this.cliente = cliente;
+		this.numeroControle = numeroControle;
 	}
 
-	// Copia as propriedades básicas da classe Pedido, costumo usar isso pra facilitar minha conversão de DTO
+	// Copia as propriedades básicas da classe Pedido, costumo usar isso pra
+	// facilitar minha conversão de DTO
 	public PedidoDTO(Pedido entity) {
-		BeanUtils.copyProperties(entity, this); 
+		BeanUtils.copyProperties(entity, this);
 
 		// Adiciona o cliente manualmente para garantir que a associação é mantida
 		if (entity.getCliente() != null) {
@@ -88,6 +91,14 @@ public class PedidoDTO {
 
 	public void setCliente(ClienteDTO cliente) {
 		this.cliente = cliente;
+	}
+
+	public Long getNumeroControle() {
+		return numeroControle;
+	}
+
+	public void setNumeroControle(Long numeroControle) {
+		this.numeroControle = numeroControle;
 	}
 
 }
