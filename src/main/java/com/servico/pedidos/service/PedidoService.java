@@ -3,8 +3,10 @@ package com.servico.pedidos.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +19,7 @@ import com.servico.pedidos.entities.Pedido;
 import com.servico.pedidos.entities.dto.PedidoDTO;
 import com.servico.pedidos.repositories.ClienteRepository;
 import com.servico.pedidos.repositories.PedidoRepository;
-import com.servico.pedidos.request.PedidoResponse;
+import com.servico.pedidos.request.PedidoResponseDTO;
 
 @Service
 public class PedidoService {
@@ -28,11 +30,12 @@ public class PedidoService {
 	@Autowired
 	private ClienteRepository clienteRepository;
 
-	//Utilizei logger para rastrear ações como criar o pedido, buscar por Id, etc, facilita minha vida na depuração
+	// Utilizei logger para rastrear ações como criar o pedido, buscar por Id, etc,
+	// facilita minha vida na depuração
 	private static final Logger logger = LoggerFactory.getLogger(PedidoService.class);
 
 	@Transactional
-	public PedidoResponse criarPedido(PedidoDTO pedidoDTO) {
+	public PedidoResponseDTO criarPedido(PedidoDTO pedidoDTO) {
 		// Verificar se o cliente existe
 		Cliente cliente;
 		try {
@@ -84,45 +87,30 @@ public class PedidoService {
 
 		Pedido pedidoSalvo = pedidoRepository.save(pedido);
 
-		return new PedidoResponse("Pedido criado com sucesso. Número de controle: "
-				+ pedidoSalvo.getNumeroControle(),
+		return new PedidoResponseDTO(
+				"Pedido criado com sucesso. Número de controle: " + pedidoSalvo.getNumeroControle(),
 				new PedidoDTO(pedidoSalvo));
 	}
 
+	
+	// Retorno um unico pedido pelo id
 	@Transactional(readOnly = true)
 	public Optional<PedidoDTO> findById(Long id) {
-		Optional<PedidoDTO> pedido = pedidoRepository.findById(id).map(PedidoDTO::new);
-		if (pedido.isEmpty()) {
-			logger.warn("Pedido não encontrado com ID: {}", id);
-		} else {
-			logger.info("Pedido encontrado com ID: {}", id);
-		}
-		return pedido;
+		return pedidoRepository.findById(id).map(PedidoDTO::new);
 	}
 
+	//  Retorna todos os pedidos
 	@Transactional(readOnly = true)
 	public List<PedidoDTO> findAll() {
-		List<Pedido> result = pedidoRepository.findAll();
-		logger.info("Encontrados {} pedidos", result.size());
-		List<PedidoDTO> dto = result.stream().map(PedidoDTO::new).toList();
-		return dto;
+		return pedidoRepository.findAll().stream().map(PedidoDTO::new).collect(Collectors.toList());
 	}
 
 	// retorna um lista de pedidos por data de cadastro
 	@Transactional(readOnly = true)
 	public List<PedidoDTO> findByDataCadastro(LocalDate dataCadastro) {
-		logger.info("Buscando pedidos por data de cadastro: {}", dataCadastro);
-
 		List<Pedido> result = pedidoRepository.findByDataCadastro(dataCadastro);
-
-		if (result.isEmpty()) {
-			logger.warn("Nenhum pedido encontrado para a data: {}", dataCadastro);
-		} else {
-			logger.info("Encontrados {} pedidos para a data: {}", result.size(), dataCadastro);
-		}
-
-		List<PedidoDTO> dtoList = result.stream().map(PedidoDTO::new).toList();
-		return dtoList;
+		return result.isEmpty() ? Collections.emptyList()
+				: result.stream().map(PedidoDTO::new).collect(Collectors.toList());
 	}
 
 	// Metodo para deletar pedido por Id

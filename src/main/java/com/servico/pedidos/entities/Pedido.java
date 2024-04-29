@@ -115,7 +115,7 @@ public class Pedido {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(dataCadastro, id, nome, numeroControle, quantidade, valor);
+		return Objects.hash(id);
 	}
 
 	@Override
@@ -127,9 +127,7 @@ public class Pedido {
 		if (getClass() != obj.getClass())
 			return false;
 		Pedido other = (Pedido) obj;
-		return Objects.equals(dataCadastro, other.dataCadastro) && Objects.equals(id, other.id)
-				&& Objects.equals(nome, other.nome) && Objects.equals(numeroControle, other.numeroControle)
-				&& Objects.equals(quantidade, other.quantidade) && Objects.equals(valor, other.valor);
+		return Objects.equals(id, other.id);
 	}
 
 }

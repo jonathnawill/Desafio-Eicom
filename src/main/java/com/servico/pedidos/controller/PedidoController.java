@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.servico.pedidos.entities.dto.PedidoDTO;
-import com.servico.pedidos.request.PedidoResponse;
+import com.servico.pedidos.request.PedidoResponseDTO;
 import com.servico.pedidos.service.PedidoService;
 
 @RestController
@@ -30,7 +30,7 @@ public class PedidoController {
 	@PostMapping("criar-pedido")
 	public ResponseEntity<?> criarPedido(@RequestBody PedidoDTO pedidoDTO) {
 		try {
-			PedidoResponse novoPedido = pedidoService.criarPedido(pedidoDTO);
+			PedidoResponseDTO novoPedido = pedidoService.criarPedido(pedidoDTO);
 			return ResponseEntity.ok(novoPedido);
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
@@ -87,7 +87,7 @@ public class PedidoController {
 	public ResponseEntity<?> buscarPedidoPorNumeroControle(@PathVariable Long numeroControle) {
 		Optional<PedidoDTO> pedido = pedidoService.findByNumeroControle(numeroControle);
 
-		if (pedido.isEmpty()) {
+		if (!pedido.isPresent()) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body("Pedido com número de controle " + numeroControle + " não encontrado.");
 		}
@@ -96,14 +96,14 @@ public class PedidoController {
 	}
 
 	// Método para buscar pedidos por data de cadastro
-	// A URL deve ter a data no formato yyyy-MM-dd, como por exemplo
-	// /pedidos/data/2024-04-25
+	// A URL deve ter a data no formato dd-MM-yyyy, como por exemplo
+	// /pedidos/data/04-05-1999
 	@GetMapping("/data/{dataCadastro}")
 	public ResponseEntity<?> buscarPedidosPorDataCadastro(@PathVariable String dataCadastro) {
 		LocalDate data;
 		try {
 			// Converte a data recebida como string para um objeto LocalDate
-			// O formato deve ser yyyy-MM-dd, como 2024-04-25
+			// O formato deve ser dd-MM-yyyy, como 04-05-1999
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 			data = LocalDate.parse(dataCadastro, formatter);
 		} catch (Exception e) {
